@@ -2,14 +2,14 @@ import { motion } from "framer-motion";
 
 export default function Portfolio() {
   return (
-    <div className="bg-gray-950 text-white min-h-screen font-sans">
+    <div className="bg-black text-white font-sans">
       {/* Hero Section */}
-      <section className="flex flex-col items-center justify-center py-24 px-6 text-center">
+      <section className="flex flex-col items-center justify-center py-36 px-6 text-center min-h-screen bg-gradient-to-b from-black via-gray-900 to-gray-800">
         <motion.h1
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-5xl font-bold mb-4"
+          className="text-6xl font-bold mb-4 tracking-tight"
         >
           Naga Sai Rishik Reddy Vaka
         </motion.h1>
@@ -17,32 +17,42 @@ export default function Portfolio() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.8 }}
-          className="text-xl max-w-2xl"
+          className="text-2xl max-w-3xl text-gray-300"
         >
-          Backend & DevOps Engineer | Python • AWS • Docker • Linux • Automation
+          DevOps & Backend Engineer – Automating infrastructure. Building scalable systems. Delivering clean code.
         </motion.p>
-        <div className="mt-8 flex gap-4">
+        <div className="mt-10 flex gap-4">
           <a
             href="/resume.pdf"
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-white px-4 py-2 rounded hover:bg-white hover:text-black transition"
+            className="border border-white px-6 py-3 rounded hover:bg-white hover:text-black transition text-lg"
           >
             Download Resume
           </a>
           <a
             href="#projects"
-            className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition"
+            className="bg-white text-black px-6 py-3 rounded hover:bg-gray-200 transition text-lg"
           >
             View Projects
           </a>
         </div>
       </section>
 
+      {/* About Section */}
+      <section className="px-6 py-24 bg-black text-center">
+        <h2 className="text-4xl font-bold mb-6">About Me</h2>
+        <p className="max-w-4xl mx-auto text-lg text-gray-400 leading-relaxed">
+          I'm Rishik, a DevOps and Backend engineer passionate about building reliable systems with automation and scale in mind.
+          With experience in AWS, Docker, Ansible, and Python, I've modernized infrastructure at Cognizant and streamlined Linux deployments at SIU.
+          I'm focused on delivering clean architecture and real-world efficiency.
+        </p>
+      </section>
+
       {/* Projects Section */}
-      <section id="projects" className="px-6 py-16 bg-gray-900">
-        <h2 className="text-3xl font-semibold mb-12 text-center">Projects</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <section id="projects" className="px-6 py-24 bg-gradient-to-b from-gray-900 to-gray-950">
+        <h2 className="text-4xl font-semibold mb-12 text-center">Projects</h2>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
           {projects.map((project, idx) => (
             <motion.div
               key={idx}
@@ -50,7 +60,7 @@ export default function Portfolio() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="bg-gray-800 border border-gray-700 p-6 rounded shadow-md hover:shadow-xl transition duration-300"
+              className="bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-md hover:shadow-2xl transition duration-300"
             >
               <h3 className="text-xl font-bold mb-2">{project.title}</h3>
               <p className="text-sm text-gray-400 mb-4">{project.description}</p>
