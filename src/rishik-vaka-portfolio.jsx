@@ -1,60 +1,221 @@
-import { motion } from "framer-motion";
+import { motion, useViewportScroll, useTransform } from "framer-motion";
 import { FaGithub, FaLinkedin, FaEnvelope } from "react-icons/fa";
+import { useState, useEffect } from "react";
 
+// --- Animation Configuration ---
+const animConfig = {
+  duration: 0.8, // General animation duration (less relevant for springs, but kept)
+  springStiffness: 120, // Adjusted stiffness for a more responsive spring feel
+  springDamping: 20,    // Adjusted damping for a smoother spring bounce
+  staggerChildren: 0.12, // Slightly increased stagger delay for a more noticeable wave effect
+  viewAmount: 0.3,      // How much of the element needs to be in view
+};
+
+// --- Framer Motion Variants ---
+
+// All variants now use type: "spring" for a more natural feel
 const fadeInUp = {
-  initial: { opacity: 0, y: 40 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+  initial: { opacity: 0, y: 100, scale: 0.95 }, // Increased y from 60 to 100, slightly reduced scale for more 'pop'
+  animate: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: "spring", stiffness: animConfig.springStiffness, damping: animConfig.springDamping },
+  },
 };
 
 const slideInLeft = {
-  initial: { opacity: 0, x: -50 },
-  animate: { opacity: 1, x: 0, transition: { duration: 0.7, ease: "easeOut" } },
+  initial: { opacity: 0, x: -100 }, // Increased x from -70 to -100
+  animate: {
+    opacity: 1,
+    x: 0,
+    transition: { type: "spring", stiffness: animConfig.springStiffness, damping: animConfig.springDamping },
+  },
 };
 
 const slideInRight = {
-  initial: { opacity: 0, x: 50 },
-  animate: { opacity: 1, x: 0, transition: { duration: 0.7, ease: "easeOut" } },
+  initial: { opacity: 0, x: 100 }, // Increased x from 70 to 100
+  animate: {
+    opacity: 1,
+    x: 0,
+    transition: { type: "spring", stiffness: animConfig.springStiffness, damping: animConfig.springDamping },
+  },
 };
 
 const staggerContainer = {
   initial: {},
   animate: {
-    transition: { staggerChildren: 0.15 },
+    transition: { staggerChildren: animConfig.staggerChildren },
   },
 };
 
 export default function Portfolio() {
+  const [activeSection, setActiveSection] = useState("hero");
+  const { scrollYProgress } = useViewportScroll(); // Hook for scroll progress
+
+  // Parallax for background blobs
+  const blob1Y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]); // Moves down faster than scroll
+  const blob2Y = useTransform(scrollYProgress, [0, 1], ["0%", "-30%"]); // Moves up slightly
+
+  // Scale for hero title on scroll
+  const heroScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.8]); // Scales down from 1 to 0.8 over first 30% of scroll
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]); // Fades out with scroll
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = ['hero', 'about', 'skills', 'experience', 'education', 'certifications', 'projects', 'contact'];
+      let currentActive = 'hero';
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const section = document.getElementById(sections[i]);
+        if (section) {
+          const rect = section.getBoundingClientRect();
+          // Check if the section is at least 50% in view from the top
+          if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+            currentActive = sections[i];
+            break;
+          }
+        }
+      }
+      setActiveSection(currentActive);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Call on mount to set initial active section
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToSection = (id) => {
+    const section = document.getElementById(id);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const skills = [
-    "Python", "C++", "Bash", "JavaScript",
-    "Linux", "Ansible", "Shell Scripting", "Docker",
-    "REST APIs", "PostgreSQL", "MySQL",
-    "Git", "GitHub Actions", "CI/CD",
-    "HTML", "CSS", "React",
-    "OOP", "Data Structures", "Algorithms", "Networking"
+    "Python", "C++", "Shell Scripting", "PowerShell",
+    "Linux/UNIX", "Ansible", "DHCP", "DNS", "Active Directory",
+    "AWS", "Docker", "GitHub Actions (CI/CD)",
+    "TCP/IP", "Firewall",
+    "PostgreSQL", "MySQL",
+    "HTML", "CSS", "JavaScript", "React",
+    "OOP", "Data Structures", "Algorithms", "Design Patterns",
+    "Git", "Agile/Scrum", "Security Policy Implementation", "Automation"
   ];
 
   const experiences = [
     {
       role: "Student System Administrator",
-      company: "Southern Illinois University (SIU)",
+      company: "Southern Illinois University Carbondale",
       period: "Aug 2023 – May 2025",
       details: [
-        "Automated Linux provisioning reducing setup time by 70%.",
-        "Managed Hyper-V, VMware, and secure deployments.",
-        "Maintained CI/CD for Linux workflows and user management."
+        "Engineered and deployed automated provisioning and configuration solutions for Linux servers by implementing automation tools like Ansible, Python, and Shell scripting, achieving a 70% reduction in deployment times and enhanced operational efficiency.",
+        "Proactively diagnosed and resolved complex hardware and software issues on Linux systems, ensuring high system availability and reducing downtime by 90% through proactive solutions.",
+        "Designed and enforced robust security policies and procedures aligned with industry standards, significantly improving system security and mitigating vulnerabilities.",
+        "Automated repetitive administrative workflows using PowerShell, enhancing operational efficiency by 30% and optimizing resource utilization.",
+        "Configured and maintained virtualized environments using VMware and Hyper-V, optimizing resource allocation and ensuring seamless performance across workloads."
       ],
       animation: slideInLeft
     },
     {
       role: "Programmer Analyst Trainee",
-      company: "Cognizant",
+      company: "Cognizant Technology Solutions",
       period: "Jun 2022 – Jul 2023",
       details: [
-        "Trained in software engineering and Linux systems.",
-        "Supported AWS EC2 migration and Linux deployment testing.",
-        "Maintained COBOL/JCL code, monitored systems, contributed to documentation."
+        "Contributed to backend development projects for an insurance client (Lincoln Financial Group) at Cognizant Technology Solutions.",
+        "Migrated mainframe applications to AWS EC2, performing detailed inventory analysis and executing end-to-end testing to ensure seamless functionality in the cloud environment.",
+        "Developed and optimized COBOL programs, PROCs, and JCL scripts to support migration and enhance application performance.",
+        "Handled Linux server management including upgrades, installations, configuration, and monitoring, ensuring high system reliability and performance."
       ],
       animation: slideInRight
+    },
+    {
+      role: "Intern",
+      company: "Cognizant Technology Solutions Ltd",
+      period: "Jan 2022 – Jun 2022",
+      details: [
+        "Responsible for Upgrade, installs, configuration and administration and monitoring on Linux servers.",
+        "Excellent in patches and packages installation on Linux/Unix Environment.",
+        "Built, configured and deployed Virtual machines and templates.",
+        "Monitored Linux server for CPU Utilization, Memory Utilization, and Disk Utilization for performance monitoring.",
+        "Worked with team members to promote great customer service and pleasant work environment.",
+        "Collaborated with support team to assist client stakeholders with emergent technical issues and develop effective solutions."
+      ],
+      animation: slideInLeft
+    }
+  ];
+
+  const education = [
+    {
+      institution: "Southern Illinois University Carbondale",
+      degree: "M.S. in Computer Science",
+      period: "Aug 2023 – May 2025",
+      gpa: "3.81 / 4.00",
+      details: ["Thesis: Robot Intention Recognition for Near Future Collision Avoidance - Developed a real-time intent prediction model using RNNs, Transformers, and Bayesian Inference for autonomous collision avoidance."]
+    },
+    {
+      institution: "GITAM DEEMED TO BE UNIVERSITY",
+      degree: "B.Tech in Computer Science",
+      period: "Jul 2018 – May 2022",
+      gpa: "7.74 / 10",
+      details: []
+    }
+  ];
+
+  const certifications = [
+    {
+      name: "Docker Foundations Professional Certificate",
+      issuer: "LinkedIn Learning And Docker",
+    },
+    {
+      name: "Ansible Essentials",
+      issuer: "N/A",
+    },
+    {
+      name: "Ubuntu Linux Professional Certificate",
+      issuer: "Canonical",
+    },
+    {
+      name: "Getting started with Google Cloud",
+      issuer: "N/A",
+    },
+  ];
+
+  const projects = [
+    {
+      title: "Stock Market Dashboard",
+      description: "Real-time data application using Flask, Alpha Vantage API, and HTML/CSS/JS for financial visualization.",
+      techStack: ["Flask", "Alpha Vantage API", "HTML", "CSS", "JavaScript"],
+      link: null
+    },
+    {
+      title: "Health Integration Dashboard",
+      description: "Full-stack application integrating Oura Ring API, with backend in Python and analytics via PostgreSQL, Dash, and Plotly.",
+      techStack: ["Python", "Oura Ring API", "PostgreSQL", "Dash", "Plotly"],
+      link: null
+    },
+    {
+      title: "Breast Cancer Detection",
+      description: "Predictive model using Keras, SVM, and Matplotlib for high-accuracy medical classification.",
+      techStack: ["Keras", "SVM", "Matplotlib", "Python"],
+      link: null
+    },
+    {
+      title: "Currency Converter API",
+      description: "RESTful API built with Python and Flask for real-time exchange rate conversion.",
+      techStack: ["Python", "Flask", "REST API"],
+      link: null
+    },
+    {
+      title: "Gender Detection Model",
+      description: "Built using TensorFlow and Keras to classify gender traits from input data.",
+      techStack: ["TensorFlow", "Keras", "Python"],
+      link: null
+    },
+    {
+      title: "Product Showcase Website",
+      description: "Responsive static site using HTML and CSS to display headphone brand products.",
+      techStack: ["HTML", "CSS"],
+      link: null
     }
   ];
 
@@ -64,42 +225,79 @@ export default function Portfolio() {
       animate="animate"
       className="relative bg-gradient-to-tr from-indigo-50 via-white to-rose-50 text-gray-900 font-sans scroll-smooth overflow-x-hidden min-h-screen"
     >
-      {/* Keyframes */}
       <style>{`
         @keyframes floatY {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(30px); }
+          0%, 100% {
+            transform: translateY(0px) rotateZ(0deg);
+          }
+          50% {
+            transform: translateY(30px) rotateZ(3deg); /* Add subtle rotation */
+          }
+        }
+
+        /* Subtle grid background */
+        .grid-overlay {
+          background-image:
+            repeating-linear-gradient(0deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 1px, transparent 1px, transparent 30px),
+            repeating-linear-gradient(90deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 1px, transparent 1px, transparent 30px);
         }
       `}</style>
 
-      {/* Animated Background Blobs */}
+      {/* Background Blobs with Parallax */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute w-[1000px] h-[1000px] bg-gradient-to-tr from-purple-400 via-pink-300 to-yellow-200 opacity-40 blur-[120px] rounded-full top-[-250px] left-[-300px] animate-[spin_40s_linear_infinite,floatY_16s_ease-in-out_infinite]" />
-        <div className="absolute w-[800px] h-[800px] bg-gradient-to-bl from-blue-300 via-purple-200 to-pink-100 opacity-40 blur-[100px] rounded-full bottom-[-200px] right-[-250px] animate-[spin_60s_reverse_linear_infinite,floatY_20s_ease-in-out_infinite]" />
+        <motion.div
+          style={{ y: blob1Y }} // Apply parallax to y position
+          className="absolute w-[1200px] h-[1200px] bg-gradient-to-tr from-purple-400 via-pink-300 to-yellow-200 opacity-30 blur-[150px] rounded-full top-[-300px] left-[-400px] animate-[spin_45s_linear_infinite,floatY_18s_ease-in-out_infinite]"
+        />
+        <motion.div
+          style={{ y: blob2Y }} // Apply parallax to y position
+          className="absolute w-[900px] h-[900px] bg-gradient-to-bl from-blue-300 via-purple-200 to-pink-100 opacity-30 blur-[130px] rounded-full bottom-[-250px] right-[-350px] animate-[spin_65s_reverse_linear_infinite,floatY_22s_ease-in-out_infinite]"
+        />
+        {/* New Grid Overlay */}
+        <div className="grid-overlay absolute inset-0 -z-10 opacity-75 pointer-events-none" />
       </div>
+
+      {/* Navigation Bar */}
+      <motion.nav
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+        className="fixed top-0 left-0 right-0 z-50 bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg shadow-md py-4 px-6 md:px-12 flex justify-center"
+      >
+        <div className="flex space-x-6 md:space-x-10 text-gray-700 font-medium text-lg">
+          {['hero', 'about', 'skills', 'experience', 'education', 'certifications', 'projects', 'contact'].map((sectionId) => (
+            <button
+              key={sectionId}
+              onClick={() => scrollToSection(sectionId)}
+              className={`hover:text-purple-600 transition duration-300 ${activeSection === sectionId ? 'text-purple-600 font-bold border-b-2 border-purple-600' : ''}`}
+            >
+              {sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}
+            </button>
+          ))}
+        </div>
+      </motion.nav>
 
       {/* Hero Section */}
       <section id="hero" className="flex flex-col items-center justify-center text-center pt-48 pb-32 px-6 min-h-screen">
         <motion.div
           variants={staggerContainer}
           initial="initial"
-          whileInView="animate"
-          viewport={{ once: true, amount: 0.3 }}
-          className="space-y-6"
+          animate="animate"
+          // Added max-w-4xl mx-auto to ensure the entire block is centered and constrained
+          className="space-y-6 max-w-4xl mx-auto"
         >
           <motion.h1
-            variants={fadeInUp}
-            whileInView={{ scale: 1.05 }}
-            transition={{ duration: 0.6 }}
+            style={{ scale: heroScale, opacity: heroOpacity }} // Apply scroll-based scale and opacity
             className="text-5xl md:text-7xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-pink-500"
           >
-            Rishik Vaka
+            Naga Sai Rishik Reddy Vaka
           </motion.h1>
           <motion.p
             variants={fadeInUp}
-            className="text-xl md:text-2xl text-gray-700 max-w-2xl"
+            // Removed max-w-2xl from here to allow it to expand within the parent's max-width
+            className="text-xl md:text-2xl text-gray-700"
           >
-            DevOps & Backend Engineer — building fast, automated, scalable infrastructure.
+            Backend Software Engineer — building fast, automated, scalable infrastructure.
           </motion.p>
           <motion.div
             variants={fadeInUp}
@@ -118,12 +316,37 @@ export default function Portfolio() {
           <motion.div
             initial={{ opacity: 0, y: 0 }}
             animate={{ opacity: 1, y: [0, 15, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             className="mt-10 text-gray-400"
           >
             ↓ Scroll
           </motion.div>
         </motion.div>
+      </section>
+
+      {/* About Section */}
+      <section id="about" className="px-6 py-24 text-center bg-gray-50">
+        <motion.h2
+          variants={fadeInUp}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: animConfig.viewAmount }}
+          className="text-4xl font-bold mb-10"
+        >
+          About Me
+        </motion.h2>
+        <motion.p
+          variants={fadeInUp}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: animConfig.viewAmount }}
+          className="text-lg md:text-xl text-gray-800 max-w-3xl mx-auto leading-relaxed"
+        >
+          A highly motivated and results-driven **Backend Software Engineer** with over 3 years of experience in Python, C++, and Linux systems, specializing in scalable backend systems, API development, and cloud integration.
+          I have a proven track record leading AWS-based backend modernization at Cognizant and streamlining Linux server deployments at Southern Illinois University using Ansible, Docker, and Shell scripting.
+          My expertise also includes strong command of OOP, data structures, and algorithms, with hands-on experience in PostgreSQL, MySQL, and Agile collaboration.
+          I excel at transforming complex technical challenges into streamlined solutions that directly impact operational efficiency and user experience.
+        </motion.p>
       </section>
 
       {/* Skills Section */}
@@ -132,25 +355,30 @@ export default function Portfolio() {
           variants={fadeInUp}
           initial="initial"
           whileInView="animate"
-          viewport={{ once: true, amount: 0.3 }}
+          viewport={{ once: true, amount: animConfig.viewAmount }}
           className="text-4xl font-bold mb-10"
         >
           Skills
         </motion.h2>
         <motion.div
-          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-6xl mx-auto"
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 max-w-6xl mx-auto"
           variants={staggerContainer}
           initial="initial"
           whileInView="animate"
-          viewport={{ once: true, amount: 0.3 }}
+          viewport={{ once: true, amount: animConfig.viewAmount }}
         >
           {skills.map((skill, index) => (
             <motion.div
               key={index}
               variants={fadeInUp}
-              whileHover={{ scale: 1.08, rotate: 0.3 }}
-              transition={{ type: "spring", stiffness: 250 }}
-              className="bg-white border border-gray-200 p-5 rounded-xl shadow-md hover:shadow-xl transition text-lg font-medium text-gray-800"
+              whileHover={{
+                scale: 1.08,
+                rotateZ: 1, // More subtle rotation on Z-axis
+                boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.15)",
+                // Removed rotateY and rotateX for cleaner effect
+              }}
+              transition={{ type: "spring", stiffness: animConfig.springStiffness, damping: animConfig.springDamping }}
+              className="bg-white border border-gray-200 p-5 rounded-xl shadow-md hover:shadow-xl transition text-lg font-medium text-gray-800 flex items-center justify-center"
             >
               {skill}
             </motion.div>
@@ -159,12 +387,12 @@ export default function Portfolio() {
       </section>
 
       {/* Experience Section */}
-      <section id="experience" className="px-6 py-24 text-center">
+      <section id="experience" className="px-6 py-24 text-center bg-gray-50">
         <motion.h2
           variants={fadeInUp}
           initial="initial"
           whileInView="animate"
-          viewport={{ once: true, amount: 0.3 }}
+          viewport={{ once: true, amount: animConfig.viewAmount }}
           className="text-4xl font-bold mb-12"
         >
           Experience
@@ -177,7 +405,6 @@ export default function Portfolio() {
               initial="initial"
               whileInView="animate"
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.6 }}
               className="bg-white border border-gray-200 p-6 rounded-xl shadow-md text-left"
             >
               <h3 className="text-xl font-semibold mb-1">{exp.role}</h3>
@@ -191,6 +418,171 @@ export default function Portfolio() {
           ))}
         </div>
       </section>
+
+      {/* Education Section */}
+      <section id="education" className="px-6 py-24 text-center">
+        <motion.h2
+          variants={fadeInUp}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: animConfig.viewAmount }}
+          className="text-4xl font-bold mb-12"
+        >
+          Education
+        </motion.h2>
+        <div className="max-w-4xl mx-auto space-y-10">
+          {education.map((edu, idx) => (
+            <motion.div
+              key={idx}
+              variants={fadeInUp}
+              initial="initial"
+              whileInView="animate"
+              viewport={{ once: true, amount: animConfig.viewAmount }}
+              className="bg-white border border-gray-200 p-6 rounded-xl shadow-md text-left"
+            >
+              <h3 className="text-xl font-semibold mb-1">{edu.degree}</h3>
+              <p className="text-sm text-gray-500 mb-1">{edu.institution} — {edu.period}</p>
+              <p className="text-sm text-gray-700 mb-2">GPA: {edu.gpa}</p>
+              {edu.details.length > 0 && (
+                <ul className="list-disc ml-6 text-sm text-gray-700 space-y-1">
+                  {edu.details.map((line, i) => <li key={i}>{line}</li>)}
+                </ul>
+              )}
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Certifications Section */}
+      <section id="certifications" className="px-6 py-24 text-center bg-gray-50">
+        <motion.h2
+          variants={fadeInUp}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: animConfig.viewAmount }}
+          className="text-4xl font-bold mb-12"
+        >
+          Certifications
+        </motion.h2>
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
+          variants={staggerContainer}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: animConfig.viewAmount }}
+        >
+          {certifications.map((cert, index) => (
+            <motion.div
+              key={index}
+              variants={fadeInUp}
+              whileHover={{ scale: 1.05, boxShadow: "0px 8px 16px rgba(0, 0, 0, 0.1)" }}
+              transition={{ type: "spring", stiffness: animConfig.springStiffness, damping: animConfig.springDamping }}
+              className="bg-white border border-gray-200 p-5 rounded-xl shadow-md text-left"
+            >
+              <h3 className="text-xl font-semibold mb-1">{cert.name}</h3>
+              <p className="text-sm text-gray-500">{cert.issuer}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
+      {/* Projects Section */}
+      <section id="projects" className="px-6 py-24 text-center">
+        <motion.h2
+          variants={fadeInUp}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: animConfig.viewAmount }}
+          className="text-4xl font-bold mb-12"
+        >
+          Projects
+        </motion.h2>
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
+          variants={staggerContainer}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: animConfig.viewAmount }}
+        >
+          {projects.map((project, index) => (
+            <motion.div
+              key={index}
+              variants={fadeInUp}
+              whileHover={{ scale: 1.03, boxShadow: "0px 15px 30px rgba(0, 0, 0, 0.18)" }}
+              transition={{ type: "spring", stiffness: animConfig.springStiffness, damping: animConfig.springDamping }}
+              className="bg-white border border-gray-200 p-6 rounded-xl shadow-lg text-left flex flex-col h-full"
+            >
+              <h3 className="text-xl font-semibold mb-2">{project.title}</h3>
+              <p className="text-sm text-gray-700 mb-4 flex-grow">{project.description}</p>
+              <div className="mt-auto">
+                <p className="text-xs font-semibold text-gray-600 mb-2">Technologies:</p>
+                <div className="flex flex-wrap gap-2">
+                  {project.techStack.map((tech, i) => (
+                    <span key={i} className="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+                {project.link && (
+                  <a
+                    href={project.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 inline-block text-purple-600 hover:text-purple-800 transition-colors duration-300 text-sm font-medium"
+                  >
+                    View Project &rarr;
+                  </a>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="px-6 py-24 text-center bg-gray-50">
+        <motion.h2
+          variants={fadeInUp}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: animConfig.viewAmount }}
+          className="text-4xl font-bold mb-12"
+        >
+          Contact Me
+        </motion.h2>
+        <motion.div
+          variants={fadeInUp}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: animConfig.viewAmount }}
+          className="max-w-2xl mx-auto bg-white border border-gray-200 p-8 rounded-xl shadow-md space-y-4"
+        >
+          <p className="text-lg text-gray-700">Feel free to reach out for collaborations or inquiries!</p>
+          <div className="flex items-center justify-center gap-4 text-gray-800">
+            <FaEnvelope className="text-2xl text-purple-600" />
+            <a href="mailto:rishikvaka28@gmail.com" className="text-lg hover:text-purple-700 transition-colors duration-300">
+              rishikvaka28@gmail.com
+            </a>
+          </div>
+          <div className="flex items-center justify-center gap-4 text-gray-800">
+            <FaLinkedin className="text-2xl text-purple-600" />
+            <a href="https://www.linkedin.com/in/rishik-reddy-vaka-985048194/" target="_blank" rel="noreferrer" className="text-lg hover:text-purple-700 transition-colors duration-300">
+              LinkedIn Profile
+            </a>
+          </div>
+          <div className="flex items-center justify-center gap-4 text-gray-800">
+            <FaGithub className="text-2xl text-purple-600" />
+            <a href="https://github.com/RishikVaka28" target="_blank" rel="noreferrer" className="text-lg hover:text-purple-700 transition-colors duration-300">
+              GitHub Profile
+            </a>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-8 text-center text-sm text-gray-500 bg-white border-t border-gray-100">
+        <p>&copy; {new Date().getFullYear()} Rishik Vaka. All rights reserved.</p>
+      </footer>
     </motion.div>
   );
 }
