@@ -1,5 +1,5 @@
-import { motion, useViewportScroll, useTransform } from "framer-motion";
-import { FaGithub, FaLinkedin, FaEnvelope, FaSun, FaMoon } from "react-icons/fa"; // Import sun and moon icons
+import { motion, useViewportScroll, useTransform, AnimatePresence } from "framer-motion";
+import { FaGithub, FaLinkedin, FaEnvelope, FaSun, FaMoon } from "react-icons/fa";
 import { useState, useEffect } from "react";
 
 // --- Animation Configuration ---
@@ -8,7 +8,7 @@ const animConfig = {
   springStiffness: 120,
   springDamping: 20,
   staggerChildren: 0.12,
-  viewAmount: 0.3,
+  viewAmount: 0.3, // Amount of element visible before animation triggers
 };
 
 // --- Framer Motion Variants ---
@@ -47,47 +47,74 @@ const staggerContainer = {
   },
 };
 
+const typingVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.05, staggerChildren: 0.05 } },
+};
+
+const characterVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+};
+
+
 export default function Portfolio() {
-  const [activeSection, setActiveSection] = useState("hero");
-  // --- Dark Mode State ---
+  const [activeSection, setActiveSection] = useState("root");
   const [theme, setTheme] = useState(() => {
-    // Initialize theme from localStorage or default to 'light'
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') || 'light';
+      return localStorage.getItem('theme') || 'dark'; // Default to dark for techie vibe
     }
-    return 'light';
+    return 'dark';
   });
+
+  const [selectedSkillCategory, setSelectedSkillCategory] = useState("All");
 
   const { scrollYProgress } = useViewportScroll();
 
-  // Effect to apply dark class to HTML element
+  // Hero typing text
+  const heroDescription = "Backend Software Engineer — building fast, automated, scalable infrastructure.";
+  const [typedText, setTypedText] = useState("");
+  const [isTypingComplete, setIsTypingComplete] = useState(false);
+
+  useEffect(() => {
+    let i = 0;
+    const typingInterval = setInterval(() => {
+      if (i < heroDescription.length) {
+        setTypedText((prev) => prev + heroDescription.charAt(i));
+        i++;
+      } else {
+        clearInterval(typingInterval);
+        setIsTypingComplete(true);
+      }
+    }, 40); // Typing speed
+    return () => clearInterval(typingInterval);
+  }, []);
+
+
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-    // Save theme preference to localStorage
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Function to toggle theme
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
   };
 
-  // Parallax for background blobs
-  const blob1Y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-  const blob2Y = useTransform(scrollYProgress, [0, 1], ["0%", "-30%"]);
+  const geom1Y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const geom2Y = useTransform(scrollYProgress, [0, 1], ["0%", "-30%"]);
 
-  // Scale for hero title on scroll
   const heroScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.8]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
 
   useEffect(() => {
+    const sections = ['root', 'stack', 'builds', 'connect'];
+    let currentActive = 'root';
+
     const handleScroll = () => {
-      const sections = ['hero', 'about', 'skills', 'experience', 'education', 'certifications', 'projects', 'contact'];
-      let currentActive = 'hero';
       for (let i = sections.length - 1; i >= 0; i--) {
         const section = document.getElementById(sections[i]);
         if (section) {
@@ -113,16 +140,43 @@ export default function Portfolio() {
     }
   };
 
-  const skills = [
-    "Python", "C++", "Shell Scripting", "PowerShell",
-    "Linux/UNIX", "Ansible", "DHCP", "DNS", "Active Directory",
-    "AWS", "Docker", "GitHub Actions (CI/CD)",
-    "TCP/IP", "Firewall",
-    "PostgreSQL", "MySQL",
-    "HTML", "CSS", "JavaScript", "React",
-    "OOP", "Data Structures", "Algorithms", "Design Patterns",
-    "Git", "Agile/Scrum", "Security Policy Implementation", "Automation"
+  const allSkills = [
+    { name: "Python", category: "Languages" },
+    { name: "C++", category: "Languages" },
+    { name: "Shell Scripting", category: "Scripting" },
+    { name: "PowerShell", category: "Scripting" },
+    { name: "Linux/UNIX", category: "Operating Systems" },
+    { name: "Ansible", category: "DevOps" },
+    { name: "DHCP", category: "Networking" },
+    { name: "DNS", category: "Networking" },
+    { name: "Active Directory", category: "System Administration" },
+    { name: "AWS", category: "Cloud" },
+    { name: "Docker", category: "DevOps" },
+    { name: "GitHub Actions (CI/CD)", category: "DevOps" },
+    { name: "TCP/IP", category: "Networking" },
+    { name: "Firewall", category: "Security" },
+    { name: "PostgreSQL", category: "Databases" },
+    { name: "MySQL", category: "Databases" },
+    { name: "HTML", category: "Frontend" },
+    { name: "CSS", category: "Frontend" },
+    { name: "JavaScript", category: "Frontend" },
+    { name: "React", category: "Frontend" },
+    { name: "OOP", category: "Fundamentals" },
+    { name: "Data Structures", category: "Fundamentals" },
+    { name: "Algorithms", category: "Fundamentals" },
+    { name: "Design Patterns", category: "Fundamentals" },
+    { name: "Git", category: "Development Tools" },
+    { name: "Agile/Scrum", category: "Methodologies" },
+    { name: "Security Policy Implementation", category: "Security" },
+    { name: "Automation", category: "DevOps" },
   ];
+
+  const skillCategories = ["All", ...new Set(allSkills.map(skill => skill.category))].sort();
+
+  const filteredSkills = selectedSkillCategory === "All"
+    ? allSkills
+    : allSkills.filter(skill => skill.category === selectedSkillCategory);
+
 
   const experiences = [
     {
@@ -245,9 +299,7 @@ export default function Portfolio() {
     <motion.div
       initial="initial"
       animate="animate"
-      // Added dark mode classes for main container
-      className="relative bg-gradient-to-tr from-indigo-50 via-white to-rose-50 text-gray-900 font-sans scroll-smooth overflow-x-hidden min-h-screen
-                 dark:from-gray-900 dark:via-gray-950 dark:to-blue-950 dark:text-gray-100"
+      className="relative bg-gray-950 text-gray-100 font-sans scroll-smooth overflow-x-hidden min-h-screen"
     >
       <style>{`
         @keyframes floatY {
@@ -259,31 +311,133 @@ export default function Portfolio() {
           }
         }
 
-        .grid-overlay {
-          background-image:
-            repeating-linear-gradient(0deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 1px, transparent 1px, transparent 30px),
-            repeating-linear-gradient(90deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 1px, transparent 1px, transparent 30px);
+        @keyframes bounceY {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
         }
-        .dark .grid-overlay {
+
+        /* Techie grid pattern with subtle glow */
+        .tech-grid-background {
           background-image:
-            repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 30px),
-            repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 30px);
+            repeating-linear-gradient(0deg, rgba(30,255,255,0.02) 0px, rgba(30,255,255,0.02) 1px, transparent 1px, transparent 40px), /* Cyan grid lines */
+            repeating-linear-gradient(90deg, rgba(30,255,255,0.02) 0px, rgba(30,255,255,0.02) 1px, transparent 1px, transparent 40px);
+          background-size: 40px 40px;
+          opacity: 0.2; /* Make it subtle */
+        }
+
+        /* Subtle glowing border on hover/focus for techie elements */
+        .tech-glow-border:hover, .tech-glow-border:focus-within {
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4), inset 0 0 10px rgba(0, 255, 255, 0.2); /* Cyan glow */
+            border-color: #00FFFF;
+        }
+        .dark .tech-glow-border:hover, .dark .tech-glow-border:focus-within {
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4), inset 0 0 10px rgba(0, 255, 255, 0.2);
+            border-color: #00FFFF;
+        }
+
+        /* Adjusted link colors for techie theme */
+        .tech-link {
+          color: #00FFFF; /* Electric blue */
+        }
+        .tech-link:hover {
+          color: #00BFFF; /* Slightly darker blue on hover */
+        }
+
+        /* Particle/Starfield Background */
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: twinkle 10s infinite ease-in-out, moveStar 20s linear infinite;
+            opacity: 0;
+            z-index: -2;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        @keyframes moveStar {
+            from { transform: translateY(0); }
+            to { transform: translateY(-100vh); }
+        }
+
+        /* Glitch effect on hover for cards (skills, projects, etc.) */
+        .glitch-effect:hover {
+            animation: glitch 0.5s infinite;
+        }
+        @keyframes glitch {
+            0% { transform: translate(0, 0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        /* Heading underline effect */
+        .heading-underline::after {
+          content: '';
+          display: block;
+          width: 0;
+          height: 3px;
+          background: linear-gradient(90deg, #00FFFF, #8A2BE2);
+          margin: 8px auto 0;
+          transition: width 0.6s ease-out;
+        }
+
+        .heading-underline.active::after {
+          width: 100%;
+        }
+
+        /* Hero description typing effect */
+        .typing-cursor {
+          display: inline-block;
+          background-color: #00FFFF;
+          width: 2px;
+          height: 1.2em;
+          margin-left: 2px;
+          vertical-align: middle;
+          animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+          from, to { background-color: transparent }
+          50% { background-color: #00FFFF; }
         }
       `}</style>
 
-      {/* Background Blobs with Parallax */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
+      {/* Background Geometric Elements (replacing blobs) with Parallax */}
+      <div className="absolute inset-0 -z-10 overflow-hidden tech-grid-background">
+        {/* Faint, stretched geometric shapes/lines with parallax */}
         <motion.div
-          style={{ y: blob1Y }}
-          className="absolute w-[1200px] h-[1200px] bg-gradient-to-tr from-purple-400 via-pink-300 to-yellow-200 opacity-30 blur-[150px] rounded-full top-[-300px] left-[-400px] animate-[spin_45s_linear_infinite,floatY_18s_ease-in-out_infinite]
-                     dark:from-purple-600 dark:via-pink-500 dark:to-yellow-400 dark:opacity-20"
+          style={{ y: geom1Y }}
+          className="absolute w-[800px] h-[800px] bg-gradient-to-tr from-purple-800 to-cyan-500 opacity-10 blur-[120px] rounded-full top-[-200px] left-[-300px] transform rotate-45 animate-[spin_60s_linear_infinite]"
         />
         <motion.div
-          style={{ y: blob2Y }}
-          className="absolute w-[900px] h-[900px] bg-gradient-to-bl from-blue-300 via-purple-200 to-pink-100 opacity-30 blur-[130px] rounded-full bottom-[-250px] right-[-350px] animate-[spin_65s_reverse_linear_infinite,floatY_22s_ease-in-out_infinite]
-                     dark:from-blue-600 dark:via-purple-500 dark:to-pink-400 dark:opacity-20"
+          style={{ y: geom2Y }}
+          className="absolute w-[600px] h-[600px] bg-gradient-to-bl from-blue-700 to-purple-500 opacity-10 blur-[100px] rounded-full bottom-[-150px] right-[-250px] transform -rotate-45 animate-[spin_80s_reverse_linear_infinite]"
         />
-        <div className="grid-overlay absolute inset-0 -z-10 opacity-75 pointer-events-none" />
+        {/* Subtle Particle/Starfield - Generate a few particles */}
+        {[...Array(50)].map((_, i) => (
+          <div
+            key={i}
+            className="particle"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              width: `${Math.random() * 3 + 1}px`, // 1-4px
+              height: `${Math.random() * 3 + 1}px`,
+              animationDelay: `${Math.random() * 10}s`, // Stagger animation start
+              animationDuration: `${Math.random() * 15 + 10}s`, // Vary movement speed
+            }}
+          />
+        ))}
       </div>
 
       {/* Navigation Bar */}
@@ -291,35 +445,33 @@ export default function Portfolio() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.5 }}
-        // Added dark mode classes for nav
-        className="fixed top-0 left-0 right-0 z-50 bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg shadow-md py-4 px-6 md:px-12 flex justify-between items-center
-                   dark:bg-gray-900 dark:bg-opacity-80 dark:shadow-xl dark:shadow-gray-950"
+        className="fixed top-0 left-0 right-0 z-50 bg-gray-900 bg-opacity-80 backdrop-filter backdrop-blur-lg shadow-xl shadow-gray-950 py-4 px-6 md:px-12 flex justify-between items-center border-b border-gray-700"
       >
-        <div className="flex space-x-6 md:space-x-10 text-gray-700 font-medium text-lg dark:text-gray-300">
-          {['hero', 'about', 'skills', 'experience', 'education', 'certifications', 'projects', 'contact'].map((sectionId) => (
+        <div className="flex space-x-6 md:space-x-10 text-gray-300 font-medium text-lg">
+          {['root', 'stack', 'builds', 'connect'].map((sectionId) => (
             <button
               key={sectionId}
               onClick={() => scrollToSection(sectionId)}
-              className={`hover:text-purple-600 transition duration-300
-                          ${activeSection === sectionId ? 'text-purple-600 font-bold border-b-2 border-purple-600 dark:text-purple-400 dark:border-purple-400' : ''}`}
+              className={`hover:text-cyan-400 transition duration-300
+                          ${activeSection === sectionId ? 'text-cyan-400 font-bold border-b-2 border-cyan-400' : ''}`}
             >
               {sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}
             </button>
           ))}
         </div>
-        {/* Theme Toggle Button */}
+        {/* Theme Toggle Button (still useful even if dark is default) */}
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200
-                     hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-300"
+          className="p-2 rounded-full bg-gray-700 text-gray-200
+                     hover:bg-gray-600 transition-colors duration-300"
           aria-label="Toggle theme"
         >
           {theme === 'light' ? <FaMoon size={20} /> : <FaSun size={20} />}
         </button>
       </motion.nav>
 
-      {/* Hero Section */}
-      <section id="hero" className="flex flex-col items-center justify-center text-center pt-48 pb-32 px-6 min-h-screen">
+      {/* Hero Section -> Root Section */}
+      <section id="root" className="flex flex-col items-center justify-center text-center pt-48 pb-32 px-6 min-h-screen">
         <motion.div
           variants={staggerContainer}
           initial="initial"
@@ -328,116 +480,160 @@ export default function Portfolio() {
         >
           <motion.h1
             style={{ scale: heroScale, opacity: heroOpacity }}
-            className="text-5xl md:text-7xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-pink-500
-                       dark:from-purple-400 dark:to-pink-400"
+            className="text-5xl md:text-7xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-400"
           >
             Naga Sai Rishik Reddy Vaka
           </motion.h1>
           <motion.p
-            variants={fadeInUp}
-            className="text-xl md:text-2xl text-gray-700 dark:text-gray-300"
+            variants={typingVariants}
+            initial="initial"
+            animate="animate"
+            className="text-xl md:text-2xl text-gray-300 min-h-[3rem]" // min-h to prevent layout shift
           >
-            Backend Software Engineer — building fast, automated, scalable infrastructure.
+            {typedText.split('').map((char, index) => (
+              <motion.span key={index} variants={characterVariants}>
+                {char}
+              </motion.span>
+            ))}
+            {isTypingComplete && <span className="typing-cursor"></span>} {/* Only show cursor when typing */}
           </motion.p>
           <motion.div
             variants={fadeInUp}
-            className="flex justify-center gap-6 text-2xl text-gray-700 dark:text-gray-300"
+            className="flex justify-center gap-6 text-2xl text-gray-300"
           >
-            <a href="https://github.com/RishikVaka28" target="_blank" rel="noreferrer" className="hover:text-black dark:hover:text-white">
+            <a href="https://github.com/RishikVaka28" target="_blank" rel="noreferrer" className="hover:text-cyan-400">
               <FaGithub />
             </a>
-            <a href="https://www.linkedin.com/in/rishik-reddy-vaka-985048194/" target="_blank" rel="noreferrer" className="hover:text-black dark:hover:text-white">
+            <a href="https://www.linkedin.com/in/rishik-reddy-vaka-985048194/" target="_blank" rel="noreferrer" className="hover:text-cyan-400">
               <FaLinkedin />
             </a>
-            <a href="mailto:rishikvaka28@gmail.com" className="hover:text-black dark:hover:text-white">
+            <a href="mailto:rishikvaka28@gmail.com" className="hover:text-cyan-400">
               <FaEnvelope />
             </a>
           </motion.div>
+          {/* Enhanced Scroll Indicator Animation */}
           <motion.div
             initial={{ opacity: 0, y: 0 }}
             animate={{ opacity: 1, y: [0, 15, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            className="mt-10 text-gray-400 dark:text-gray-500"
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
+            className="mt-10 text-gray-500 animate-[bounceY_1.5s_infinite]"
           >
-            ↓ Scroll
+            <span className="text-3xl tech-link">↓</span> Scroll
           </motion.div>
         </motion.div>
       </section>
 
-      {/* About Section */}
-      <section id="about" className="px-6 py-24 text-center bg-gray-50 dark:bg-gray-900">
+      {/* About & Skills Section -> Stack Section */}
+      <section id="stack" className="px-6 py-24 text-center bg-gray-900 border-t border-b border-gray-800">
         <motion.h2
           variants={fadeInUp}
           initial="initial"
           whileInView="animate"
           viewport={{ once: true, amount: animConfig.viewAmount }}
-          className="text-4xl font-bold mb-10"
+          className="text-4xl font-bold mb-10 text-cyan-400 heading-underline"
         >
-          About Me
+          About My Stack
         </motion.h2>
         <motion.p
           variants={fadeInUp}
           initial="initial"
           whileInView="animate"
           viewport={{ once: true, amount: animConfig.viewAmount }}
-          className="text-lg md:text-xl text-gray-800 dark:text-gray-200 max-w-3xl mx-auto leading-relaxed"
+          className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-12"
         >
-          A highly motivated and results-driven **Backend Software Engineer** with over 3 years of experience in Python, C++, and Linux systems, specializing in scalable backend systems, API development, and cloud integration.
+          A highly motivated and results-driven <strong className="text-cyan-300">Backend Software Engineer</strong> with over 3 years of experience in Python, C++, and Linux systems, specializing in scalable backend systems, API development, and cloud integration.
           I have a proven track record leading AWS-based backend modernization at Cognizant and streamlining Linux server deployments at Southern Illinois University using Ansible, Docker, and Shell scripting.
           My expertise also includes strong command of OOP, data structures, and algorithms, with hands-on experience in PostgreSQL, MySQL, and Agile collaboration.
           I excel at transforming complex technical challenges into streamlined solutions that directly impact operational efficiency and user experience.
         </motion.p>
-      </section>
 
-      {/* Skills Section */}
-      <section id="skills" className="px-6 py-24 text-center relative z-10">
-        <motion.h2
+        <motion.h3
           variants={fadeInUp}
           initial="initial"
           whileInView="animate"
           viewport={{ once: true, amount: animConfig.viewAmount }}
-          className="text-4xl font-bold mb-10"
+          className="text-3xl font-bold mb-8 text-purple-400 heading-underline"
         >
-          Skills
-        </motion.h2>
+          My Technical Arsenal
+        </motion.h3>
+
+        {/* Skill Category Filter Dropdown */}
+        <motion.div
+          variants={fadeInUp}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: animConfig.viewAmount }}
+          className="mb-8 max-w-xs mx-auto"
+        >
+          <label htmlFor="skill-category" className="sr-only">Filter skills by category</label>
+          <select
+            id="skill-category"
+            value={selectedSkillCategory}
+            onChange={(e) => setSelectedSkillCategory(e.target.value)}
+            className="w-full p-3 border border-gray-700 rounded-md shadow-sm bg-gray-800 text-gray-200
+                       focus:ring-cyan-500 focus:border-cyan-500 tech-glow-border"
+          >
+            {skillCategories.map(category => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </motion.div>
+
         <motion.div
           className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 max-w-6xl mx-auto"
           variants={staggerContainer}
           initial="initial"
-          whileInView="animate"
+          animate="animate"
+          key={selectedSkillCategory}
           viewport={{ once: true, amount: animConfig.viewAmount }}
         >
-          {skills.map((skill, index) => (
-            <motion.div
-              key={index}
-              variants={fadeInUp}
-              whileHover={{
-                scale: 1.08,
-                rotateZ: 1,
-                boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.15)",
-              }}
-              transition={{ type: "spring", stiffness: animConfig.springStiffness, damping: animConfig.springDamping }}
-              // Added dark mode classes for skill cards
-              className="bg-white border border-gray-200 p-5 rounded-xl shadow-md hover:shadow-xl transition text-lg font-medium text-gray-800 flex items-center justify-center
-                         dark:bg-gray-800 dark:border-gray-700 dark:shadow-lg dark:shadow-gray-950 dark:text-gray-200"
-            >
-              {skill}
-            </motion.div>
-          ))}
+          <AnimatePresence> {/* Enable exit animations for filtered items */}
+            {filteredSkills.map((skill, index) => (
+              <motion.div
+                key={skill.name}
+                variants={fadeInUp}
+                whileHover={{
+                  scale: 1.08,
+                  rotateZ: 1,
+                  boxShadow: "0 0 20px rgba(0, 255, 255, 0.4)",
+                  borderColor: "#00FFFF"
+                }}
+                exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }} // Exit animation
+                transition={{ type: "spring", stiffness: animConfig.springStiffness, damping: animConfig.springDamping }}
+                className="bg-gray-800 border border-gray-700 p-5 rounded-md shadow-md transition text-lg font-medium text-gray-200 flex items-center justify-center
+                          hover:shadow-cyan-500/30 tech-glow-border glitch-effect"
+              >
+                {skill.name}
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </motion.div>
       </section>
 
-      {/* Experience Section */}
-      <section id="experience" className="px-6 py-24 text-center bg-gray-50 dark:bg-gray-900">
+      {/* Experience, Education & Certifications, Projects Section -> Builds Section */}
+      <section id="builds" className="px-6 py-24 text-center bg-gray-950">
         <motion.h2
           variants={fadeInUp}
           initial="initial"
           whileInView="animate"
           viewport={{ once: true, amount: animConfig.viewAmount }}
-          className="text-4xl font-bold mb-12"
+          className="text-4xl font-bold mb-12 text-cyan-400 heading-underline"
         >
-          Experience
+          My Builds & Accomplishments
         </motion.h2>
+
+        {/* Experience Sub-section */}
+        <motion.h3
+          variants={fadeInUp}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: animConfig.viewAmount }}
+          className="text-3xl font-bold mb-8 mt-16 text-purple-400 heading-underline"
+        >
+          Professional Experience
+        </motion.h3>
         <div className="max-w-4xl mx-auto space-y-10">
           {experiences.map((exp, idx) => (
             <motion.div
@@ -446,13 +642,11 @@ export default function Portfolio() {
               initial="initial"
               whileInView="animate"
               viewport={{ once: true, amount: 0.2 }}
-              // Added dark mode classes for experience cards
-              className="bg-white border border-gray-200 p-6 rounded-xl shadow-md text-left
-                         dark:bg-gray-800 dark:border-gray-700 dark:shadow-lg dark:shadow-gray-950"
+              className="bg-gray-800 border border-gray-700 p-6 rounded-md shadow-md text-left tech-glow-border glitch-effect"
             >
-              <h3 className="text-xl font-semibold mb-1">{exp.role}</h3>
-              <p className="text-sm text-gray-500 mb-2 dark:text-gray-400">{exp.company} — {exp.period}</p>
-              <ul className="list-disc ml-6 text-sm text-gray-700 space-y-1 dark:text-gray-300">
+              <h3 className="text-xl font-semibold mb-1 text-gray-100">{exp.role}</h3>
+              <p className="text-sm text-gray-400 mb-2">{exp.company} — {exp.period}</p>
+              <ul className="list-disc ml-6 text-sm text-gray-300 space-y-1">
                 {exp.details.map((point, i) => (
                   <li key={i}>{point}</li>
                 ))}
@@ -460,19 +654,17 @@ export default function Portfolio() {
             </motion.div>
           ))}
         </div>
-      </section>
 
-      {/* Education Section */}
-      <section id="education" className="px-6 py-24 text-center">
-        <motion.h2
+        {/* Education Sub-section */}
+        <motion.h3
           variants={fadeInUp}
           initial="initial"
           whileInView="animate"
           viewport={{ once: true, amount: animConfig.viewAmount }}
-          className="text-4xl font-bold mb-12"
+          className="text-3xl font-bold mb-8 mt-16 text-purple-400 heading-underline"
         >
-          Education
-        </motion.h2>
+          Education & Certifications
+        </motion.h3>
         <div className="max-w-4xl mx-auto space-y-10">
           {education.map((edu, idx) => (
             <motion.div
@@ -481,36 +673,23 @@ export default function Portfolio() {
               initial="initial"
               whileInView="animate"
               viewport={{ once: true, amount: animConfig.viewAmount }}
-              // Added dark mode classes for education cards
-              className="bg-white border border-gray-200 p-6 rounded-xl shadow-md text-left
-                         dark:bg-gray-800 dark:border-gray-700 dark:shadow-lg dark:shadow-gray-950"
+              className="bg-gray-800 border border-gray-700 p-6 rounded-md shadow-md text-left tech-glow-border glitch-effect"
             >
-              <h3 className="text-xl font-semibold mb-1">{edu.degree}</h3>
-              <p className="text-sm text-gray-500 mb-1 dark:text-gray-400">{edu.institution} — {edu.period}</p>
-              <p className="text-sm text-gray-700 mb-2 dark:text-gray-300">GPA: {edu.gpa}</p>
+              <h3 className="text-xl font-semibold mb-1 text-gray-100">{edu.degree}</h3>
+              <p className="text-sm text-gray-400 mb-1">{edu.institution} — {edu.period}</p>
+              <p className="text-sm text-gray-300 mb-2">GPA: {edu.gpa}</p>
               {edu.details.length > 0 && (
-                <ul className="list-disc ml-6 text-sm text-gray-700 space-y-1 dark:text-gray-300">
+                <ul className="list-disc ml-6 text-sm text-gray-300 space-y-1">
                   {edu.details.map((line, i) => <li key={i}>{line}</li>)}
                 </ul>
               )}
             </motion.div>
           ))}
         </div>
-      </section>
 
-      {/* Certifications Section */}
-      <section id="certifications" className="px-6 py-24 text-center bg-gray-50 dark:bg-gray-900">
-        <motion.h2
-          variants={fadeInUp}
-          initial="initial"
-          whileInView="animate"
-          viewport={{ once: true, amount: animConfig.viewAmount }}
-          className="text-4xl font-bold mb-12"
-        >
-          Certifications
-        </motion.h2>
+        {/* Certifications within Education & Certifications sub-section */}
         <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto mt-8"
           variants={staggerContainer}
           initial="initial"
           whileInView="animate"
@@ -520,30 +699,26 @@ export default function Portfolio() {
             <motion.div
               key={index}
               variants={fadeInUp}
-              whileHover={{ scale: 1.05, boxShadow: "0px 8px 16px rgba(0, 0, 0, 0.1)" }}
+              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(0, 255, 255, 0.3)", borderColor: "#00FFFF" }}
               transition={{ type: "spring", stiffness: animConfig.springStiffness, damping: animConfig.springDamping }}
-              // Added dark mode classes for certification cards
-              className="bg-white border border-gray-200 p-5 rounded-xl shadow-md text-left
-                         dark:bg-gray-800 dark:border-gray-700 dark:shadow-lg dark:shadow-gray-950"
+              className="bg-gray-800 border border-gray-700 p-5 rounded-md shadow-md text-left tech-glow-border glitch-effect"
             >
-              <h3 className="text-xl font-semibold mb-1">{cert.name}</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{cert.issuer}</p>
+              <h3 className="text-xl font-semibold mb-1 text-gray-100">{cert.name}</h3>
+              <p className="text-sm text-gray-400">{cert.issuer}</p>
             </motion.div>
           ))}
         </motion.div>
-      </section>
 
-      {/* Projects Section */}
-      <section id="projects" className="px-6 py-24 text-center">
-        <motion.h2
+        {/* Projects Sub-section */}
+        <motion.h3
           variants={fadeInUp}
           initial="initial"
           whileInView="animate"
           viewport={{ once: true, amount: animConfig.viewAmount }}
-          className="text-4xl font-bold mb-12"
+          className="text-3xl font-bold mb-8 mt-16 text-purple-400 heading-underline"
         >
-          Projects
-        </motion.h2>
+          Key Projects
+        </motion.h3>
         <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
           variants={staggerContainer}
@@ -555,20 +730,17 @@ export default function Portfolio() {
             <motion.div
               key={index}
               variants={fadeInUp}
-              whileHover={{ scale: 1.03, boxShadow: "0px 15px 30px rgba(0, 0, 0, 0.18)" }}
+              whileHover={{ scale: 1.03, boxShadow: "0 0 20px rgba(0, 255, 255, 0.4)", borderColor: "#00FFFF" }}
               transition={{ type: "spring", stiffness: animConfig.springStiffness, damping: animConfig.springDamping }}
-              // Added dark mode classes for project cards
-              className="bg-white border border-gray-200 p-6 rounded-xl shadow-lg text-left flex flex-col h-full
-                         dark:bg-gray-800 dark:border-gray-700 dark:shadow-xl dark:shadow-gray-950"
+              className="bg-gray-800 border border-gray-700 p-6 rounded-md shadow-lg text-left flex flex-col h-full tech-glow-border glitch-effect"
             >
-              <h3 className="text-xl font-semibold mb-2">{project.title}</h3>
-              <p className="text-sm text-gray-700 mb-4 flex-grow dark:text-gray-300">{project.description}</p>
+              <h3 className="text-xl font-semibold mb-2 text-gray-100">{project.title}</h3>
+              <p className="text-sm text-gray-300 mb-4 flex-grow">{project.description}</p>
               <div className="mt-auto">
-                <p className="text-xs font-semibold text-gray-600 mb-2 dark:text-gray-400">Technologies:</p>
+                <p className="text-xs font-semibold text-gray-400 mb-2">Technologies:</p>
                 <div className="flex flex-wrap gap-2">
                   {project.techStack.map((tech, i) => (
-                    <span key={i} className="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full
-                                             dark:bg-purple-800 dark:text-purple-100">
+                    <span key={i} className="bg-purple-800 text-purple-100 text-xs font-medium px-2.5 py-0.5 rounded-full border border-purple-600">
                       {tech}
                     </span>
                   ))}
@@ -578,8 +750,7 @@ export default function Portfolio() {
                     href={project.link}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-4 inline-block text-purple-600 hover:text-purple-800 transition-colors duration-300 text-sm font-medium
-                               dark:text-purple-400 dark:hover:text-purple-300"
+                    className="mt-4 inline-block text-cyan-400 hover:text-cyan-300 transition-colors duration-300 text-sm font-medium"
                   >
                     View Project &rarr;
                   </a>
@@ -590,51 +761,41 @@ export default function Portfolio() {
         </motion.div>
       </section>
 
-      {/* Contact Section */}
-      <section id="contact" className="px-6 py-24 text-center bg-gray-50 dark:bg-gray-900">
+      {/* Contact Section -> Connect Section (Icons Only) */}
+      <section id="connect" className="px-6 py-24 text-center bg-gray-900 border-t border-gray-800">
         <motion.h2
           variants={fadeInUp}
           initial="initial"
           whileInView="animate"
           viewport={{ once: true, amount: animConfig.viewAmount }}
-          className="text-4xl font-bold mb-12"
+          className="text-4xl font-bold mb-12 text-cyan-400 heading-underline"
         >
-          Contact Me
+          Let's Connect
         </motion.h2>
         <motion.div
           variants={fadeInUp}
           initial="initial"
           whileInView="animate"
           viewport={{ once: true, amount: animConfig.viewAmount }}
-          // Added dark mode classes for contact card
-          className="max-w-2xl mx-auto bg-white border border-gray-200 p-8 rounded-xl shadow-md space-y-4
-                     dark:bg-gray-800 dark:border-gray-700 dark:shadow-lg dark:shadow-gray-950"
+          className="max-w-xl mx-auto bg-gray-800 border border-gray-700 p-8 rounded-md shadow-lg space-y-6 tech-glow-border glitch-effect"
         >
-          <p className="text-lg text-gray-700 dark:text-gray-300">Feel free to reach out for collaborations or inquiries!</p>
-          <div className="flex items-center justify-center gap-4 text-gray-800 dark:text-gray-200">
-            <FaEnvelope className="text-2xl text-purple-600 dark:text-purple-400" />
-            <a href="mailto:rishikvaka28@gmail.com" className="text-lg hover:text-purple-700 transition-colors duration-300 dark:hover:text-purple-300">
-              rishikvaka28@gmail.com
+          <p className="text-lg text-gray-300">Feel free to reach out for collaborations or inquiries!</p>
+          <div className="flex items-center justify-center gap-8 text-gray-200">
+            <a href="mailto:rishikvaka28@gmail.com" className="hover:text-cyan-400 transition-colors duration-300" aria-label="Email">
+              <FaEnvelope size={40} />
             </a>
-          </div>
-          <div className="flex items-center justify-center gap-4 text-gray-800 dark:text-gray-200">
-            <FaLinkedin className="text-2xl text-purple-600 dark:text-purple-400" />
-            <a href="https://www.linkedin.com/in/rishik-reddy-vaka-985048194/" target="_blank" rel="noreferrer" className="text-lg hover:text-purple-700 transition-colors duration-300 dark:hover:text-purple-300">
-              LinkedIn Profile
+            <a href="https://www.linkedin.com/in/rishik-reddy-vaka-985048194/" target="_blank" rel="noreferrer" className="hover:text-cyan-400 transition-colors duration-300" aria-label="LinkedIn">
+              <FaLinkedin size={40} />
             </a>
-          </div>
-          <div className="flex items-center justify-center gap-4 text-gray-800 dark:text-gray-200">
-            <FaGithub className="text-2xl text-purple-600 dark:text-purple-400" />
-            <a href="https://github.com/RishikVaka28" target="_blank" rel="noreferrer" className="text-lg hover:text-purple-700 transition-colors duration-300 dark:hover:text-purple-300">
-              GitHub Profile
+            <a href="https://github.com/RishikVaka28" target="_blank" rel="noreferrer" className="hover:text-cyan-400 transition-colors duration-300" aria-label="GitHub">
+              <FaGithub size={40} />
             </a>
           </div>
         </motion.div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 text-center text-sm text-gray-500 bg-white border-t border-gray-100
-                         dark:bg-gray-900 dark:border-gray-800 dark:text-gray-400">
+      <footer className="py-8 text-center text-sm text-gray-500 bg-gray-950 border-t border-gray-800">
         <p>&copy; {new Date().getFullYear()} Rishik Vaka. All rights reserved.</p>
       </footer>
     </motion.div>
