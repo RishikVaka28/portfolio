@@ -1,6 +1,6 @@
 import { motion, useViewportScroll, useTransform, AnimatePresence } from "framer-motion";
 import { FaGithub, FaLinkedin, FaEnvelope, FaSun, FaMoon } from "react-icons/fa";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // --- Animation Configuration ---
 const animConfig = {
@@ -8,7 +8,7 @@ const animConfig = {
   springStiffness: 120,
   springDamping: 20,
   staggerChildren: 0.12,
-  viewAmount: 0.3, // Amount of element visible before animation triggers
+  viewAmount: 0.3,
 };
 
 // --- Framer Motion Variants ---
@@ -57,12 +57,11 @@ const characterVariants = {
   animate: { opacity: 1 },
 };
 
-
 export default function Portfolio() {
   const [activeSection, setActiveSection] = useState("root");
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') || 'dark'; // Default to dark for techie vibe
+      return localStorage.getItem('theme') || 'dark';
     }
     return 'dark';
   });
@@ -73,23 +72,13 @@ export default function Portfolio() {
 
   // Hero typing text
   const heroDescription = "Backend Software Engineer — building fast, automated, scalable infrastructure.";
-  const [typedText, setTypedText] = useState("");
-  const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const [typedText, setTypedText] = useState(heroDescription);
+  const [isTypingComplete, setIsTypingComplete] = useState(true);
 
   useEffect(() => {
-    let i = 0;
-    const typingInterval = setInterval(() => {
-      if (i < heroDescription.length) {
-        setTypedText((prev) => prev + heroDescription.charAt(i));
-        i++;
-      } else {
-        clearInterval(typingInterval);
-        setIsTypingComplete(true);
-      }
-    }, 40); // Typing speed
-    return () => clearInterval(typingInterval);
-  }, []);
-
+    setTypedText(heroDescription);
+    setIsTypingComplete(true);
+  }, [heroDescription]);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -139,6 +128,7 @@ export default function Portfolio() {
       section.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
 
   const allSkills = [
     { name: "Python", category: "Languages" },
