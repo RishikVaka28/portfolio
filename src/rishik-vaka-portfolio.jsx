@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 
 // --- Animation Configuration ---
 const animConfig = {
-  duration: 0.8,
+  duration: 0.9,
   springStiffness: 120,
   springDamping: 20,
   staggerChildren: 0.12,
