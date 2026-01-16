@@ -18,30 +18,10 @@ A modern, interactive portfolio website showcasing my skills and experience as a
 - **CRT Scanline Effect** - Vintage terminal monitor aesthetic
 - **Floating Particles** - Animated tech-themed particles in the background
 
-## 🛠️ Technologies & Skills
 
-### Backend
-- Python | Django | Flask | FastAPI
-- REST API | GraphQL
-
-### Frontend
-- React | Angular | Vue.js
-- JavaScript | HTML5 | CSS3
-
-### Databases
-- SQL | NoSQL | Redis | Elasticsearch | Kafka
-
-### Cloud & DevOps
-- AWS | Azure
-- Docker | Kubernetes
-- Jenkins | GitLab CI/CD
-- Terraform | Ansible
-
-### Architecture
-- Microservices | TDD/BDD | Design Patterns
 
 ## 🚀 Live Demo
 
 Visit the live portfolio: [Coming Soon]
 
-## 📂 Project Structure
+
